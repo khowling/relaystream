@@ -15,7 +15,7 @@
 	<script type="text/javascript" src="jsmpeg.min.js"></script>
 	<script type="text/javascript">
 		var canvas = document.getElementById('video-canvas');
-		var url = 'ws://'+window.location.hostname+'/';
+		var url = 'ws://'+window.location.host+'/';
 		var player = new JSMpeg.Player(url, {canvas: canvas});
 	</script>
 </body>
