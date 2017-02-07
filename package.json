@@ -1,0 +1,17 @@
+{
+  "author": "",
+  "name": "simple-externalpkg",
+  "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/clemensv/azure-hybridconnections.git"
+  },
+  "dependencies": {
+    "crypto": "latest",
+    "serve-static": "^1.11.2",
+    "ws": "latest",
+    "serve-static": "latest"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {}
+}
