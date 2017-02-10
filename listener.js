@@ -43,33 +43,30 @@ const connectStdinout = (client) => {
     }
 }
 const runCmd = (client, cmd) => {
-    if (!ff) {
-        
-       try {
-            let cmd0 = cmd.split(' ')[0]
-            if (cmd0 != "stop" && cmd0 != "avconv" && cmd0 != "ffmpeg" && cmd0 != "ls" && cmd0 != "dir") {
-                client.send("command not supported", (err) => { if (err) console.log (`send err: ${err}`) })
-            } else if (cmd0 == "stop") {
-                if (ff) {
-                    ff.kill('SIGHUP');
-                } else {
-                    client.send("nothing running", (err) => { if (err) console.log (`send err: ${err}`) })
-                }
+
+    try {
+        let cmd0 = cmd.split(' ')[0]
+        if (cmd0 != "stop" && cmd0 != "avconv" && cmd0 != "ffmpeg" && cmd0 != "ls" && cmd0 != "dir") {
+            client.send("command not supported", (err) => { if (err) console.log (`send err: ${err}`) })
+        } else if (cmd0 == "stop") {
+            if (ff) {
+                ff.kill('SIGHUP');
+                ff = null
             } else {
-                console.log(`starting "${cmd.split(' ')[0]} ${JSON.stringify([...cmd.split(' ').slice(1)])}"`);
-                
-                ff = spawn(cmd.split(' ')[0], [...cmd.split(' ').slice(1)], {shell : true});
-                connectStdinout (client)
+                client.send("nothing running", (err) => { if (err) console.log (`send err: ${err}`) })
             }
-            
-        } catch (e) {
-            ff = null
-            client.send(`Catch Error: ${JSON.stringify(e)}`)
+        } else {
+            console.log(`starting "${cmd.split(' ')[0]} ${JSON.stringify([...cmd.split(' ').slice(1)])}"`);
+
+            ff = spawn(cmd.split(' ')[0], [...cmd.split(' ').slice(1)], {shell : true});
+            connectStdinout (client)
         }
-    } else {
-        console.log(`stopping....`);
-        ff.kill('SIGHUP');
+        
+    } catch (e) {
+        ff = null
+        client.send(`Catch Error: ${JSON.stringify(e)}`)
     }
+
 }
 
 hybridconnect("listen", namespace, path, keyrule, key).then((client) => {

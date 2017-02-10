@@ -20464,7 +20464,7 @@ var App = function (_Component) {
                 that.setState({ connected: false, output: that.state.output + ('\nConnection closed: (' + event.code + ') ' + event.reason) });
               };
               socket.onmessage = function (event) {
-                that.setState({ output: that.state.output + '\n > ' + event.data }, function () {
+                that.setState({ output: that.state.output + '\n> ' + event.data }, function () {
                   that.socketoutdom.scrollTop = that.socketoutdom.scrollHeight;
                 });
               };
@@ -20512,7 +20512,7 @@ var App = function (_Component) {
                 _react2.default.createElement('textarea', {
                   rows: '5',
                   style: { "width": "100%" },
-                  defaultValue: 'avconv -f v4l2  -thread_queue_size 1024 -framerate 29.97  -i /dev/video0 -f alsa -thr\nead_queue_size 1024 -i plughw:CARD=HD3000,DEV=0  -preset slow -f mpegts -codec:v mpeg\n1video -codec:a mp2 http://' + window.location.host + '/video_' + this.props.SECRETURL,
+                  defaultValue: 'avconv -f v4l2  -thread_queue_size 1024 -framerate 29.97  -i /dev/video0 -f alsa -thread_queue_size 1024 -i plughw:CARD=HD3000,DEV=0  -preset slow -f mpegts -codec:v mpeg1video -codec:a mp2 http://' + window.location.host + '/video_' + this.props.SECRETURL,
                   ref: function ref(cmd) {
                     _this2.avconvcmd = cmd;
                   } })
