@@ -1,30 +1,33 @@
-
-// Use the websocket-relay to serve a raw MPEG-TS over WebSockets. You can use
-// ffmpeg to feed the relay. ffmpeg -> websocket-relay -> browser
-// Example:
-// node websocket-relay yoursecret 8081 8082
-// ffmpeg -i <some input> -f mpegts http://localhost:8081/yoursecret
-
 const fs = require('fs'),
 	http = require('http'),
 	WebSocket = require('ws'),
 	serveStatic = require('serve-static'),
-	serve = serveStatic('public', {'index': ['viewstream.html']}),
+	serve = serveStatic('public', {'index': ['index.html']}),
+	genRelayTokens =  require('./lib/hybridconnect.js').genRelayTokens,
 	RECORD_STREAM = false,
-	STREAM_SECRET = "bob"
+	STREAM_SECRET = process.env.SECRETURL
 
 // HTTP Server to accept incomming MPEG-TS Stream from ffmpeg
-var httpServer = http.createServer( (request, response) => {
+var port = process.env.PORT || 5000,
+	httpServer = http.createServer( (request, response) => {
 	console.log (`request (static) : ${request.url}`)
 	serve(request, response, () => {
 		console.log (`request (incoming) : ${request && request.url}`)
 		if (request) {
 			var params = request.url.substr(1).split('/');
 
-			if (params[0] !== STREAM_SECRET) {
-				response.writeHead(404) ;
-				response.end();
-			} else {
+			if (params[0] == "relayurls_"+STREAM_SECRET) {
+				response.writeHead(200, {
+					"Content-Type": "application/json", 
+					"Access-Control-Allow-Origin": "*"});
+				
+				if (!(process.env.RELAY_NS && process.env.RELAY_ENTITY && process.env.RELAY_KEYNAME && process.env.RELAY_KEY)) {
+					response.end(JSON.stringify({error: 'Required environment not set, need (RELAY_NS, RELAY_ENTITY, RELAY_KEYNAME, RELAY_KEY)'}))
+				} else {
+					response.end(JSON.stringify(genRelayTokens("connect", process.env.RELAY_NS, process.env.RELAY_ENTITY, process.env.RELAY_KEYNAME, process.env.RELAY_KEY)))
+				}
+			} else if (params[0] == "video_"+STREAM_SECRET) {
+				
 
 				response.connection.setTimeout(0);
 				console.log(
@@ -50,11 +53,15 @@ var httpServer = http.createServer( (request, response) => {
 					var path = 'recordings/' + Date.now() + '.ts';
 					request.socket.recording = fs.createWriteStream(path);
 				}
-			}
+			} else {
+				response.writeHead(404) ;
+				response.end();
+			} 
 		}
 	})
 	
-}).listen(process.env.PORT || 5000);
+}).listen(port);
+console.log (`listening to port ${port}`)
 
 
 // Websocket Server

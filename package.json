@@ -6,12 +6,31 @@
     "type": "git",
     "url": "git://github.com/clemensv/azure-hybridconnections.git"
   },
+  "scripts": {
+    "dev": "webpack-dev-server  --devtool eval --hot --inline --content-base public"
+  },
+  "devDependencies": {
+    "babel-core": "*",
+    "babel-loader": "*",
+    "babel-preset-es2015": "*",
+    "babel-preset-react": "*",
+    "babili": "*",
+    "babili-webpack-plugin": "*",
+    "css-loader": "*",
+    "html-webpack-plugin": "*",
+    "http-server": "*",
+    "immutability-helper": "^2.1.1",
+    "react": "*",
+    "react-dom": "*",
+    "redux": "^3.6.0",
+    "style-loader": "*",
+    "webpack": "*",
+    "webpack-dev-server": "2.x"
+  },
   "dependencies": {
     "crypto": "latest",
-    "serve-static": "^1.11.2",
     "ws": "latest",
     "serve-static": "latest"
   },
-  "devDependencies": {},
   "optionalDependencies": {}
 }
