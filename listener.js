@@ -15,31 +15,20 @@ var path = process.argv[3];
 var keyrule = process.argv[4];
 var key = process.argv[5];
 
-let ff = null;
+var ff = null;
 
 const connectStdinout = (client) => {
     if (ff) {
+        console.log(`assigning stdout/stderr to new client`);
         ff.stdout.on('data', (data) => {
-            client.send(data.toString(), (err) => { if (err) console.log (`send err: ${err}`) })
             console.log(`stdout: ${data}`);
+            client.send(data.toString(), (err) => { if (err) console.log (`send err: ${err}`) })
         });
 
         ff.stderr.on('data', (data) => {
             client.send(data.toString(), (err) => { if (err) console.log (`send err: ${err}`) })
             console.log(`stderr: ${data}`);
         });
-
-        ff.on('close', (code) => {
-            if (code != 0) {
-                client.send(`child process exited with code ${code}`, (err) => { if (err) console.log (`send err: ${err}`) })
-            }
-            ff = null;
-        });
-
-        ff.on('error',  (err) => {
-            console.log('spawn error:', err);
-            client.send('spawn error:' + err)
-        })
     }
 }
 const runCmd = (client, cmd) => {
@@ -50,16 +39,33 @@ const runCmd = (client, cmd) => {
             client.send("command not supported", (err) => { if (err) console.log (`send err: ${err}`) })
         } else if (cmd0 == "stop") {
             if (ff) {
-                ff.kill('SIGHUP');
-                ff = null
+                console.log ('killing ' + ff.pid)
+                ff.stdin.write('q');
             } else {
                 client.send("nothing running", (err) => { if (err) console.log (`send err: ${err}`) })
             }
         } else {
-            console.log(`starting "${cmd.split(' ')[0]} ${JSON.stringify([...cmd.split(' ').slice(1)])}"`);
+             if (ff) {
+                 client.send("Stop existing process first", (err) => { if (err) console.log (`send err: ${err}`) })
+             } else {
+                console.log(`starting "${cmd.split(' ')[0]} ${JSON.stringify([...cmd.split(' ').slice(1)])}"`);
 
-            ff = spawn(cmd.split(' ')[0], [...cmd.split(' ').slice(1)], {shell : true});
-            connectStdinout (client)
+                ff = spawn(cmd.split(' ')[0], [...cmd.split(' ').slice(1)], {shell : true});
+
+                ff.on('close', (code) => {
+                    if (code != 0) {
+                        client.send(`child process exited with code ${code}`, (err) => { if (err) console.log (`send err: ${err}`) })
+                    }
+                    ff = null;
+                });
+
+                ff.on('error',  (err) => {
+                    console.log('spawn error:', err);
+                    client.send('spawn error:' + err)
+                })
+
+                connectStdinout (client)
+            }
         }
         
     } catch (e) {
