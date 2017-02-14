@@ -29,8 +29,9 @@
   },
   "dependencies": {
     "crypto": "latest",
-    "ws": "latest",
-    "serve-static": "latest"
+    "flushwritable": "^1.0.0",
+    "serve-static": "latest",
+    "ws": "latest"
   },
   "optionalDependencies": {}
 }

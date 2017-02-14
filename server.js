@@ -4,6 +4,8 @@ const fs = require('fs'),
 	serveStatic = require('serve-static'),
 	serve = serveStatic('public', {'index': ['index.html']}),
 	genRelayTokens =  require('./lib/hybridconnect.js').genRelayTokens,
+	{AzBlobWritable, createSASLocator} = require('./lib/AzBlobWritable.js'),
+	saslocator  = createSASLocator (process.env.STORE_ACCOUNT, process.env.STORE_CONTAINER, 10000, process.env.STORE_KEY),
 	RECORD_STREAM = false,
 	STREAM_SECRET = process.env.SECRETURL
 
@@ -14,9 +16,9 @@ var port = process.env.PORT || 5000,
 	serve(request, response, () => {
 		console.log (`request (incoming) : ${request && request.url}`)
 		if (request) {
-			var params = request.url.substr(1).split('/');
+			var path0 = request.url.substr(1).split('/')[0];
 
-			if (params[0] == "relayurls_"+STREAM_SECRET) {
+			if (path0 == "relayurls_"+STREAM_SECRET) {
 				response.writeHead(200, {
 					"Content-Type": "application/json", 
 					"Access-Control-Allow-Origin": "*"});
@@ -26,7 +28,18 @@ var port = process.env.PORT || 5000,
 				} else {
 					response.end(JSON.stringify(genRelayTokens("connect", process.env.RELAY_NS, process.env.RELAY_ENTITY, process.env.RELAY_KEYNAME, process.env.RELAY_KEY)))
 				}
-			} else if (params[0] == "video_"+STREAM_SECRET) {
+			} else if (path0 == "dash" && request.method == "POST") {
+				//The request object that's passed in to a handler implements the ReadableStream interface. 
+				// This stream can be listened to or piped elsewhere just like any other stream. 
+				// We can grab the data right out of the stream by listening to the stream's 'data' and 'end' events.
+				
+				//In paused mode, the stream.read() method must be called explicitly to read chunks of data from the stream.
+				//All Readable streams begin in paused mode but can be switched to flowing mode in one of the following ways:
+				// Adding a 'data' event handler., Calling the stream.resume() method. Calling the stream.pipe() method to send the data to a Writable.
+				let blobStream = new AzBlobWritable (saslocator, request.url.substr(1))
+				request.pipe(blobStream())
+
+			} else if (path0 == "video_"+STREAM_SECRET) {
 				
 
 				response.connection.setTimeout(0);

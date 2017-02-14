@@ -3,3 +3,5 @@ node_modules/*
 #public/index.html
 #public/app.bundle.js
 ENV.ps1
+test.js
+MOV.mp4
