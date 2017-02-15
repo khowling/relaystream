@@ -16,9 +16,10 @@ var port = process.env.PORT || 5000,
 	serve(request, response, () => {
 		console.log (`request (incoming) : ${request && request.url}`)
 		if (request) {
-			var path0 = request.url.substr(1).split('/')[0];
+			var fullpath = request.url.substr(1),
+			    toppath = fullpath.split('/')[0];
 
-			if (path0 == "relayurls_"+STREAM_SECRET) {
+			if (toppath == "relayurls_"+STREAM_SECRET) {
 				response.writeHead(200, {
 					"Content-Type": "application/json", 
 					"Access-Control-Allow-Origin": "*"});
@@ -28,7 +29,7 @@ var port = process.env.PORT || 5000,
 				} else {
 					response.end(JSON.stringify(genRelayTokens("connect", process.env.RELAY_NS, process.env.RELAY_ENTITY, process.env.RELAY_KEYNAME, process.env.RELAY_KEY)))
 				}
-			} else if (path0 == "dash" && request.method == "POST") {
+			} else if (toppath == "dash" && request.method == "POST") {
 				//The request object that's passed in to a handler implements the ReadableStream interface. 
 				// This stream can be listened to or piped elsewhere just like any other stream. 
 				// We can grab the data right out of the stream by listening to the stream's 'data' and 'end' events.
@@ -36,10 +37,11 @@ var port = process.env.PORT || 5000,
 				//In paused mode, the stream.read() method must be called explicitly to read chunks of data from the stream.
 				//All Readable streams begin in paused mode but can be switched to flowing mode in one of the following ways:
 				// Adding a 'data' event handler., Calling the stream.resume() method. Calling the stream.pipe() method to send the data to a Writable.
-				let blobStream = new AzBlobWritable (saslocator, request.url.substr(1))
-				request.pipe(blobStream())
+				request.pipe(new AzBlobWritable (saslocator, fullpath)).on('finish',  () => { 
+					response.end()
+				});
 
-			} else if (path0 == "video_"+STREAM_SECRET) {
+			} else if (toppath == "video_"+STREAM_SECRET) {
 				
 
 				response.connection.setTimeout(0);
