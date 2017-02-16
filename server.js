@@ -29,7 +29,7 @@ var port = process.env.PORT || 5000,
 				} else {
 					response.end(JSON.stringify(genRelayTokens("connect", process.env.RELAY_NS, process.env.RELAY_ENTITY, process.env.RELAY_KEYNAME, process.env.RELAY_KEY)))
 				}
-			} else if (toppath == "dash" && request.method == "POST") {
+			} else if (toppath == "wcam"  && request.method == "POST") {
 				//The request object that's passed in to a handler implements the ReadableStream interface. 
 				// This stream can be listened to or piped elsewhere just like any other stream. 
 				// We can grab the data right out of the stream by listening to the stream's 'data' and 'end' events.
