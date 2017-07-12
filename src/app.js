@@ -31,7 +31,19 @@ export default class App extends Component {
 
 
   componentDidMount() {
-    this.player = new JSMpeg.Player('ws://'+ this.props.SERVER_URL + '/', {canvas: this.playercanvas});
+    //this.player = new JSMpeg.Player('ws://'+ this.props.SERVER_URL + '/', {canvas: this.playercanvas});
+
+    // initialise player (unless iphone, then use native <video> element
+    if (!navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+      this.hls = new Hls();
+      this.hls.loadSource('https://dashstore1.blob.core.windows.net/wcam/wcam/playlist.m3u8');
+      this.hls.attachMedia(this.playervideo);
+      this.hls.on(Hls.Events.MANIFEST_PARSED,function() {
+          this.playervideo.play();
+      });
+    }
+
+
     var xhr  = new XMLHttpRequest(), that = this;
     xhr.open('GET', 'http://' + this.props.SERVER_URL + '/relayurls_' + this.props.SECRETURL);
     xhr.send();
@@ -85,9 +97,10 @@ export default class App extends Component {
               <textarea
                 rows="5"
                 style={{"width": "100%"}}
-                defaultValue={`avconv -f v4l2  -thread_queue_size 1024 -framerate 29.97  -i /dev/video0 -f alsa -thread_queue_size 1024 -i plughw:CARD=HD3000,DEV=0  -preset slow -f mpegts -codec:v mpeg1video -codec:a mp2 http://${window.location.host}/video_${this.props.SECRETURL}`}
                 ref={(cmd) => { this.avconvcmd = cmd}}></textarea></code></p>
             <p>
+                <button className="btn btn-lg" onClick={() => this.avconvcmd.value = `avconv -f v4l2  -thread_queue_size 1024 -framerate 29.97  -i /dev/video0 -f alsa -thread_queue_size 1024 -i plughw:CARD=HD3000,DEV=0  -preset slow -f mpegts -codec:v mpeg1video -codec:a mp2 http://${window.location.host}/video_${this.props.SECRETURL}`}>MPEG-TS (live)</button>
+                <button className="btn  btn-lg" onClick={() => this.avconvcmd.value = `ffmpeg -f v4l2 -i /dev/video0 -f alsa  -thread_queue_size 1024 -i plughw:CARD=HD3000,DEV=0  -codec:v libx264 -crf 18 -profile:v high -level 4.2 -pix_fmt yuv420p  -codec:a aac -b:a 128k -strict experimental -f ssegment -segment_list http://${window.location.host}/wcam/hls/playlist.m3u8 -segment_list_flags +live -segment_time 5 http://${window.location.host}/wcam/hls/out%03d.ts`}>HLS</button>
                 <button className="btn btn-success btn-lg" disabled={!this.state.connected} onClick={this.toggleCmd.bind(this, 1)}>start</button>
                
                 <button className="btn btn-default btn-lg" disabled={!this.state.connected} onClick={this.toggleCmd.bind(this, 0)}>stop</button>
@@ -101,7 +114,10 @@ export default class App extends Component {
             /figure>
           </div>
           <div className="col-xs-12 col-md-6">
+            
               <canvas ref={(canvas) => { this.playercanvas = canvas}}></canvas>
+
+              <video controls ref={(video) => { this.playervideo = video}}></video>
           </div>
         </div>
       </div>
